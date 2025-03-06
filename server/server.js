@@ -9,4 +9,6 @@ app.use(cors());
 let reports = []
 
 
-app.get('/reports')
+app.get('/reports', function (req, res) {
+    res.json(reports)
+})
