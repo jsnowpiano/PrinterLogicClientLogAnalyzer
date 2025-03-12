@@ -1,6 +1,7 @@
 const testlogs = require("./testlogs")
 
-let reports = []
+let reports = [];
+let printersChanged = 0;
 function checkHeaderReport(log) {
     if (log.id <= 26) {
         return true
@@ -77,22 +78,104 @@ function createHeaderReport(log) {
             let status = log.description.substr( start , log.description.length - 1)
             reports.push( {
                 id: reports.length,
-                type: "CAC",
+                type: "ONP",
                 report: status
             })
+        } else if (log.description.includes("Off Network Printing Default")) {
+            let start = log.description.indexOf(":") + 2
+            let status = log.description.substr( start , log.description.length - 1)
+            reports.push( {
+                id: reports.length,
+                type: "ONPD",
+                report: status
+            })
+        } else if (log.description.includes("Off Network Cloud Printing Enabled")) {
+            let start = log.description.indexOf(":") + 2
+            let status = log.description.substr( start , log.description.length - 1)
+            reports.push( {
+                id: reports.length,
+                type: "ONCP",
+                report: status
+            })
+        } else if (log.description.includes("Off Network Cloud Printing Default")) {
+            let start = log.description.indexOf(":") + 2
+            let status = log.description.substr( start , log.description.length - 1)
+            reports.push( {
+                id: reports.length,
+                type: "ONCPD",
+                report: status
+            })
+        } else if (log.description.includes("Home Path")) {
+            let start = log.description.indexOf(":") + 2
+            let status = log.description.substr( start , log.description.length - 1)
+            reports.push( {
+                id: reports.length,
+                type: "HomeURL",
+                report: status
+            })
+        } else if (log.description.includes("Home Path")) {
+            let start = log.description.indexOf(":") + 2
+            let status = log.description.substr( start , log.description.length - 1)
+            reports.push( {
+                id: reports.length,
+                type: "HomeURL",
+                report: status
+            })
+        } 
+    }
+}
+function exists(log) {
+    for (let i = 0; i < reports.length; i++) {
+        if (reports[i].report == log.description) {
+            return true;
         }
+    }
+    return false;
+}
 
+
+function mainConditionals(log) {
+    if (log.description.includes("Printer Change Detected") ) {
+        console.log("Printer change detected")
+        printersChanged++;
+    } else if (log.description.includes("error") || log.description.includes("ERROR") || log.description.includes("Error")) {
+        console.log("Error found")
+        reports.push({
+            id: reports.length,
+            type: "error",
+            report: log.description
+        })
+    } else if (!exists(log)) {
+        console.log("Report found")
+        reports.push ({
+            id: reports.length,
+            type: "report",
+            report: log.description
+        })
+    }
+}
+
+function checkIfTraceback(log) {
+    if (log.description.includes("Traceback")) {
+        return true;
+
+    }else {
+        return false;
     }
 }
 
 
-function GenerateReports(logs) {
+function generateReports(logs) {
     for (let i = 0; i < logs.length; i++) {
         if (checkHeaderReport(logs[i])) {
             createHeaderReport(logs[i])
+        } else if(!checkIfTraceback(logs[i]) && !checkHeaderReport(logs[i]) && !exists(logs[i]) ) {
+            mainConditionals(logs[i])
         }
     }
+    return reports;
 }
 
-GenerateReports(testlogs.logs);
-console.log(reports)
+module.exports = {
+    generateReports
+}

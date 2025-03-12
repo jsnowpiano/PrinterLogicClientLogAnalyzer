@@ -1,4 +1,4 @@
-# printerlogicloganalyzer
+# client
 
 ## Project setup
 ```
