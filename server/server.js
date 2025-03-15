@@ -6,11 +6,22 @@ const userModel = require("./modelUser");
 const articleModel = require("./modelarticle");
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const session = require('express-session');
 
 const app = express();
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:8080', // Replace with your client URL
+    credentials: true
+}));
+
+app.use(session({
+    secret: 'your-secret-key', // Replace with a strong secret key
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Set to true if using HTTPS
+}));
 
 let formattedLogsObjectList = []
 
@@ -52,7 +63,6 @@ function parseLogs(unfixedLogString) {
     }
 }
 
-
 app.get('/reports', function (req, res) {
     res.json(report.generateReports(formattedLogsObjectList))
 })
@@ -61,7 +71,6 @@ app.post('/reports', function (req, res) {
     console.log("Parsing logs: ", req.body.logs)
     parseLogs(req.body.logs)
     res.status(200).send("Logs parsed successfully.")
-
 })
 
 app.post("/user", async function(req, res) {
@@ -87,6 +96,35 @@ app.post("/user", async function(req, res) {
         console.log(err);
     }
 })
+
+app.post("/login", async function(req, res) {
+    try {
+        const user = await userModel.User.findOne({ email: req.body.email });
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Invalid email or password" });
+        }
+
+        const validPassword = await bcrypt.compare(req.body.password, user.password);
+        if (!validPassword) {
+            return res.status(400).json({ success: false, message: "Invalid email or password" });
+        }
+
+        req.session.user = user;
+        res.status(200).json({ success: true, message: "Logged in successfully" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Error logging in" });
+        console.log(err);
+    }
+});
+
+app.post("/logout", function(req, res) {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: "Error logging out" });
+        }
+        res.status(200).json({ success: true, message: "Logged out successfully" });
+    });
+});
 
 app.get("/user", function (req, res) {
     userModel.User.find({}).then((users) => {
@@ -137,6 +175,7 @@ app.patch("/articles/:id", function (req, res) {
     });
 });
 
-app.listen(8080, function() {
-    console.log("Server ready. listening on port 8080")
-})
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, function() {
+    console.log(`Server ready. Listening on port ${PORT}`);
+});
