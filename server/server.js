@@ -4,10 +4,12 @@ const report = require("./reports");
 const fs = require("node:fs");
 const userModel = require("./modelUser");
 const articleModel = require("./modelarticle");
+const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
 
 const app = express();
-app.use(express.json())
-app.use(express.urlencoded({extended: false}));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 
 let formattedLogsObjectList = []
@@ -40,6 +42,10 @@ function logObjectGenerator(unfixedLogSubString) {
 }
 
 function parseLogs(unfixedLogString) {
+    if(unfixedLogString == null) {
+        console.log("No logs to parse.")
+        return
+    }
     seperatedLogList = unfixedLogString.split("\n")
     for (let i = 0; i < seperatedLogList.length; i++) {
         logObjectGenerator(seperatedLogList[i]);
@@ -52,26 +58,35 @@ app.get('/reports', function (req, res) {
 })
 
 app.post('/reports', function (req, res) {
-    console.log("Parsing logs.")
+    console.log("Parsing logs: ", req.body.logs)
     parseLogs(req.body.logs)
-    res.status(200).send("Logs parsed sucessfully.")
+    res.status(200).send("Logs parsed successfully.")
 
 })
 
-app.post("/user", function(req, res) {
-            let user = new userModel.User({
-                email: req.body.email,
-                password: req.body.password
-            });
-            user.save()
+app.post("/user", async function(req, res) {
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+        let user = new userModel.User({
+            email: req.body.email,
+            password: hashedPassword
+        });
+
+        user.save()
             .then(() => {
-                res.status(201).send("User created successfully");
+                res.status(201).json({ message: "User created successfully" });
             })
             .catch((err) => {
-                res.status(500).send("Error creating user");
+                res.status(500).json({ message: "Error creating user" });
                 console.log(err);
             });
-    })
+    } catch (err) {
+        res.status(500).json({ message: "Error creating user" });
+        console.log(err);
+    }
+})
 
 app.get("/user", function (req, res) {
     userModel.User.find({}).then((users) => {
@@ -80,6 +95,8 @@ app.get("/user", function (req, res) {
 })
 
 app.get("/articles", function (req, res) {
+    console.log("Getting articles")
+    
     articleModel.Article.find({}).then((articles) => {
         res.json(articles);
     })
@@ -91,15 +108,35 @@ app.post("/articles", function (req, res) {
         description: req.body.description,
         explanation: req.body.explanation
     })
-    article.save().then(() => {
-        res.status(201).send("Article created successfully")
+    article.save().then((savedArticle) => {
+        res.status(201).json(savedArticle);
     }). catch((err) => {
-        res.status(500).send("Error creating article")
+        res.status(500).json({ message: "Error creating article" });
         console.log(err)
     })
 })
 
+app.delete("/articles", function (req, res) {
+    articleModel.Article.deleteOne({ description: req.body.description }).then(() => {
+        res.status(200).json({ message: "Article deleted successfully" });
+    }).catch((err) => { 
+        res.status(500).json({ message: "Error deleting article" });
+        console.log(err);
+    });
+}); 
+
+app.patch("/articles/:id", function (req, res) {
+    articleModel.Article.updateOne(
+        { _id: req.params.id },
+        { title: req.body.title, description: req.body.description, explanation: req.body.explanation }
+    ).then(() => {
+        res.status(200).json({ message: "Article updated successfully" });   
+    }).catch((err) => {
+        res.status(500).json({ message: "Error updating article" });
+        console.log(err);
+    });
+});
+
 app.listen(8080, function() {
     console.log("Server ready. listening on port 8080")
 })
-

@@ -145,7 +145,7 @@ function mainConditionals(log) {
             type: "error",
             report: log.description
         })
-    } else if (!exists(log)) {
+    } else if (!exists(log) && !checkHeaderSection(log)) {
         console.log("Report found")
         reports.push ({
             id: reports.length,
@@ -173,7 +173,9 @@ function generateReports(logs) {
             mainConditionals(logs[i])
         }
     }
-    return reports;
+    let data = reports
+    reports = []
+    return data;
 }
 
 module.exports = {
