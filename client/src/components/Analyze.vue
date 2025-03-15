@@ -55,7 +55,7 @@
         }
       },
       async postReports() {
-        const response = await fetch("http://localhost:8080/reports", {
+        const response = await fetch("https://printerlogicclientloganalyzer.onrender.com/reports", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -67,7 +67,7 @@
         return response;
       },
       async loadLogs() {
-        const response = await fetch("http://localhost:8080/reports");
+        const response = await fetch("https://printerlogicclientloganalyzer.onrender.com/reports");
         const data = await response.json();
         return data;
       },

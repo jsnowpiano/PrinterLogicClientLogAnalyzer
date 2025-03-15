@@ -95,7 +95,7 @@
     methods: {
       async fetchArticles() {
         try {
-          const response = await fetch('http://localhost:8080/articles');
+          const response = await fetch('https://printerlogicclientloganalyzer.onrender.com/articles');
           if (!response.ok) {
             throw new Error('Network response was not ok');
           }
@@ -103,7 +103,6 @@
           this.articles.forEach(article => {
             article.editing = false;
           });
-          console.log(JSON.stringify(toRaw(this.articles), null, 2)); // Log the raw data
         } catch (error) {
           console.error('Error fetching articles:', error);
         }
@@ -113,7 +112,7 @@
       },
       async saveArticle(article) {
         try {
-          const response = await fetch(`http://localhost:8080/articles/${article._id}`, {
+          const response = await fetch(`https://printerlogicclientloganalyzer.onrender.com/articles/${article._id}`, {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json"
@@ -157,7 +156,7 @@
       },
       async addArticle() {
         try {
-          const response = await fetch("http://localhost:8080/articles", {
+          const response = await fetch("https://printerlogicclientloganalyzer.onrender.com/articles", {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
@@ -200,7 +199,7 @@
       },
       async deleteArticle(description) {
         try {
-          const response = await fetch(`http://localhost:8080/articles`, {
+          const response = await fetch(`https://printerlogicclientloganalyzer.onrender.com/articles`, {
             method: "DELETE",
             headers: {
               "Content-Type": "application/json"

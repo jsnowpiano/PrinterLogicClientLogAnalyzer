@@ -4,8 +4,10 @@ import Cookies from 'js-cookie';
 import Home from '@/components/Home.vue';
 
 const showLogin = ref(false);
+const showCreateAccount = ref(false);
 const username = ref('');
 const password = ref('');
+const email = ref('');
 
 onMounted(() => {
   if (!Cookies.get('userLoggedIn')) {
@@ -15,13 +17,64 @@ onMounted(() => {
 
 const handleLogin = () => {
   // Perform login logic here
-  Cookies.set('userLoggedIn', 'true', { expires: 7 }); // Set cookie to expire in 7 days
-  showLogin.value = false;
+  fetch('http://localhost:8080/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: email.value,
+      password: password.value,
+    }),
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        Cookies.set('userLoggedIn', 'true', { expires: 7 }); // Set cookie to expire in 7 days
+        showLogin.value = false;
+      } else {
+        console.error('Login failed:', data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error logging in:', error);
+    });
 };
 
 const handleLogout = () => {
-  // Remove the cookie and show the login overlay
   Cookies.remove('userLoggedIn');
+  showLogin.value = true;
+};
+
+const handleCreateAccount = () => {
+  fetch('https://printerlogicclientloganalyzer.onrender.com/user', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: email.value,
+      password: password.value,
+    }),
+  })
+    .then(response => response.json())
+    .then(data => {
+      console.log('User created:', data);
+      showCreateAccount.value = false;
+      showLogin.value = true;
+    })
+    .catch(error => {
+      console.error('Error creating user:', error);
+    });
+};
+
+const showCreateAccountForm = () => {
+  showLogin.value = false;
+  showCreateAccount.value = true;
+};
+
+const showLoginForm = () => {
+  showCreateAccount.value = false;
   showLogin.value = true;
 };
 </script>
@@ -58,9 +111,20 @@ const handleLogout = () => {
     <div v-if="showLogin" class="overlay">
       <div class="login-form">
         <h2>Login</h2>
-        <v-text-field label="Username" v-model="username"></v-text-field>
+        <v-text-field label="Email" v-model="email"></v-text-field>
         <v-text-field label="Password" type="password" v-model="password"></v-text-field>
         <v-btn @click="handleLogin">Login</v-btn>
+        <v-btn @click="showCreateAccountForm">Create Account</v-btn>
+      </div>
+    </div>
+
+    <div v-if="showCreateAccount" class="overlay">
+      <div class="login-form">
+        <h2>Create Account</h2>
+        <v-text-field label="Email" v-model="email"></v-text-field>
+        <v-text-field label="Password" type="password" v-model="password"></v-text-field>
+        <v-btn @click="handleCreateAccount">Create Account</v-btn>
+        <v-btn @click="showLoginForm">Back to Login</v-btn>
       </div>
     </div>
   </v-app>
