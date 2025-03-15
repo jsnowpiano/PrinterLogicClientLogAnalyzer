@@ -1,82 +1,92 @@
 const express = require('express');
-const cors = require("cors");
-const report = require("./reports");
-const fs = require("node:fs");
-const userModel = require("./modelUser");
-const articleModel = require("./modelarticle");
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 
+// Ensure the paths to your modules are correct
+const report = require('./reports');
+const userModel = require('./modelUser');
+const articleModel = require('./modelarticle');
+
 const app = express();
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
+const allowedOrigins = [
+    'http://localhost:8081', // Local development
+    'https://jsnowpiano.github.io' // GitHub Pages
+];
+
 app.use(cors({
-    origin: 'https://jsnowpiano.github.io/PrinterLogicClientLogAnalyzerClient/', 
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 
 app.use(session({
-    secret: 'key',
+    secret: 'your-secret-key', // Replace with a strong secret key
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }
+    cookie: { secure: false } // Set to true if using HTTPS
 }));
 
-let formattedLogsObjectList = []
+let formattedLogsObjectList = [];
 
 function checkDate(date) {
     if (date.at(4) == "/" && date.at(7) == "/" && date.at(13) == ":" && date.at(16) == ":" && date.at(19) == ":") {
-        return true
+        return true;
     } else {
-        return false
+        return false;
     }
 }
 
 function logObjectGenerator(unfixedLogSubString) {
     if (unfixedLogSubString.length > 20) {
-        date = unfixedLogSubString.substr(0, 20)
+        const date = unfixedLogSubString.substr(0, 20);
         
-        if (checkDate(date)){
-            description = unfixedLogSubString.slice(21)
-            description = description.replaceAll("\r", "")
-            formattedLogsObjectList.push(
-                {
-                    id: formattedLogsObjectList.length,
-                    date: date,
-                    description: description
-                }
-            )
+        if (checkDate(date)) {
+            let description = unfixedLogSubString.slice(21);
+            description = description.replaceAll("\r", "");
+            formattedLogsObjectList.push({
+                id: formattedLogsObjectList.length,
+                date: date,
+                description: description
+            });
         }
     }
-    
 }
 
 function parseLogs(unfixedLogString) {
-    if(unfixedLogString == null) {
-        console.log("No logs to parse.")
-        return
+    if (unfixedLogString == null) {
+        console.log("No logs to parse.");
+        return;
     }
-    seperatedLogList = unfixedLogString.split("\n")
+    const seperatedLogList = unfixedLogString.split("\n");
     for (let i = 0; i < seperatedLogList.length; i++) {
         logObjectGenerator(seperatedLogList[i]);
     }
 }
 
 app.get('/reports', function (req, res) {
-    res.json(report.generateReports(formattedLogsObjectList))
-})
+    res.json(report.generateReports(formattedLogsObjectList));
+});
 
 app.post('/reports', function (req, res) {
-    console.log("Parsing logs: ", req.body.logs)
-    parseLogs(req.body.logs)
-    res.status(200).send("Logs parsed successfully.")
-})
+    console.log("Parsing logs: ", req.body.logs);
+    parseLogs(req.body.logs);
+    res.status(200).send("Logs parsed successfully.");
+});
 
-app.post("/user", function(req, res) {
+app.post("/user", async function(req, res) {
     try {
-        const salt = bcrypt.genSalt(10);
-        const hashedPassword = bcrypt.hash(req.body.password, salt);
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
         let user = new userModel.User({
             email: req.body.email,
@@ -95,16 +105,16 @@ app.post("/user", function(req, res) {
         res.status(500).json({ message: "Error creating user" });
         console.log(err);
     }
-})
+});
 
-app.post("/login", function(req, res) {
+app.post("/login", async function(req, res) {
     try {
-        const user = userModel.User.findOne({ email: req.body.email });
+        const user = await userModel.User.findOne({ email: req.body.email });
         if (!user) {
             return res.status(400).json({ success: false, message: "Invalid email or password" });
         }
 
-        const validPassword = bcrypt.compare(req.body.password, user.password);
+        const validPassword = await bcrypt.compare(req.body.password, user.password);
         if (!validPassword) {
             return res.status(400).json({ success: false, message: "Invalid email or password" });
         }
@@ -129,34 +139,34 @@ app.post("/logout", function(req, res) {
 app.get("/user", function (req, res) {
     userModel.User.find({}).then((users) => {
         res.json(users);
-    })
-})
+    });
+});
 
 app.get("/articles", function (req, res) {
-    console.log("Getting articles")
+    console.log("Getting articles");
     
     articleModel.Article.find({}).then((articles) => {
         res.json(articles);
-    })
-})
+    });
+});
 
 app.post("/articles", function (req, res) {
     let article = new articleModel.Article({
         title: req.body.title,
         description: req.body.description,
         explanation: req.body.explanation
-    })
+    });
     article.save().then((savedArticle) => {
         res.status(201).json(savedArticle);
-    }). catch((err) => {
+    }).catch((err) => {
         res.status(500).json({ message: "Error creating article" });
-        console.log(err)
-    })
-})
+        console.log(err);
+    });
+});
 
 app.delete("/articles", function (req, res) {
     articleModel.Article.deleteOne({ description: req.body.description }).then(() => {
- res.status(200).json({ message: "Article deleted successfully" });
+        res.status(200).json({ message: "Article deleted successfully" });
     }).catch((err) => { 
         res.status(500).json({ message: "Error deleting article" });
         console.log(err);
