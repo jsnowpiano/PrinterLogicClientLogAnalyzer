@@ -90,13 +90,13 @@ const showLoginForm = () => {
         >
           <v-list nav>
             <v-img src="./assets/vasion_logo_white.png" class="pa-6"></v-img>
-            <RouterLink to="/" class="custom-link">
+            <RouterLink to="/PrinterLogicClientLogAnalyzerClient/" class="custom-link">
               <v-list-item prepend-icon="mdi-home" title="Home" value="home"></v-list-item>
             </RouterLink>
-            <RouterLink to="/analyze" class="custom-link">
+            <RouterLink to="/PrinterLogicClientLogAnalyzerClient/analyze" class="custom-link">
               <v-list-item prepend-icon="mdi-chart-bell-curve" title="Analyze Logs" value="analyze"></v-list-item>
             </RouterLink>
-            <RouterLink to="/articles" class="custom-link">
+            <RouterLink to="/PrinterLogicClientLogAnalyzerClient/articles" class="custom-link">
               <v-list-item prepend-icon="mdi-clipboard" title="Articles" value="articles"></v-list-item>
             </RouterLink>
             <v-list-item prepend-icon="mdi-logout" title="Logout" value="Logout" @click="handleLogout"></v-list-item>
