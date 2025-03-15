@@ -5,9 +5,9 @@ import Analyze from '../components/Analyze.vue';
 import Articles from '../components/Articles.vue';
 
 const routes = [
-  { path: '/PrinterLogicClientLogAnalyzerClient//', component: Home },
-  { path: '/PrinterLogicClientLogAnalyzerClient//analyze', component: Analyze },
-  { path: '/PrinterLogicClientLogAnalyzerClient//articles', component: Articles }
+  { path: '/PrinterLogicClientLogAnalyzerClient/', component: Home },
+  { path: '/PrinterLogicClientLogAnalyzerClient/analyze', component: Analyze },
+  { path: '/PrinterLogicClientLogAnalyzerClient/articles', component: Articles }
 ];
 
 const router = createRouter({
