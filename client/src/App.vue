@@ -8,6 +8,8 @@ const showCreateAccount = ref(false);
 const username = ref('');
 const password = ref('');
 const email = ref('');
+const loginError = ref(''); // Ref to store the login error message
+const createAccountError = ref(''); // Ref to store the create account error message
 
 onMounted(() => {
   if (!Cookies.get('userLoggedIn')) {
@@ -17,7 +19,7 @@ onMounted(() => {
 
 const handleLogin = () => {
   // Perform login logic here
-  fetch('http://localhost:8080/login', {
+  fetch('https://printerlogicclientloganalyzer.onrender.com/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -32,11 +34,14 @@ const handleLogin = () => {
       if (data.success) {
         Cookies.set('userLoggedIn', 'true', { expires: 7 }); // Set cookie to expire in 7 days
         showLogin.value = false;
+        loginError.value = ''; // Clear the error message on successful login
       } else {
+        loginError.value = 'Login failed: ' + data.message; // Set the error message
         console.error('Login failed:', data.message);
       }
     })
     .catch(error => {
+      loginError.value = 'Error logging in: ' + error.message; // Set the error message
       console.error('Error logging in:', error);
     });
 };
@@ -47,6 +52,12 @@ const handleLogout = () => {
 };
 
 const handleCreateAccount = () => {
+  // Validate username and password length
+  if (username.value.length < 4 || password.value.length < 4) {
+    createAccountError.value = 'Username and password must be at least 4 characters long';
+    return;
+  }
+
   fetch('https://printerlogicclientloganalyzer.onrender.com/user', {
     method: 'POST',
     headers: {
@@ -62,8 +73,10 @@ const handleCreateAccount = () => {
       console.log('User created:', data);
       showCreateAccount.value = false;
       showLogin.value = true;
+      createAccountError.value = ''; // Clear the error message on successful account creation
     })
     .catch(error => {
+      createAccountError.value = 'Error creating user: ' + error.message; // Set the error message
       console.error('Error creating user:', error);
     });
 };
@@ -115,6 +128,7 @@ const showLoginForm = () => {
         <v-text-field label="Password" type="password" v-model="password"></v-text-field>
         <v-btn @click="handleLogin">Login</v-btn>
         <v-btn @click="showCreateAccountForm">Create Account</v-btn>
+        <p v-if="loginError" class="error-message">{{ loginError }}</p> <!-- Display the error message -->
       </div>
     </div>
 
@@ -125,6 +139,7 @@ const showLoginForm = () => {
         <v-text-field label="Password" type="password" v-model="password"></v-text-field>
         <v-btn @click="handleCreateAccount">Create Account</v-btn>
         <v-btn @click="showLoginForm">Back to Login</v-btn>
+        <p v-if="createAccountError" class="error-message">{{ createAccountError }}</p> <!-- Display the error message -->
       </div>
     </div>
   </v-app>
@@ -186,5 +201,10 @@ html, body {
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   width: 400px; /* Adjust the width as needed */
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
 }
 </style>

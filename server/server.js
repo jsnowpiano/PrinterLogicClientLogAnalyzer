@@ -3,19 +3,21 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
-
-// Ensure the paths to your modules are correct
 const report = require('./reports');
 const userModel = require('./modelUser');
 const articleModel = require('./modelarticle');
+
+
+
+
 
 const app = express();
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 const allowedOrigins = [
-    'http://localhost:8081', // Local development
-    'https://jsnowpiano.github.io' // GitHub Pages
+    'http://localhost:8081', 
+    'https://jsnowpiano.github.io'
 ];
 
 app.use(cors({
@@ -30,10 +32,10 @@ app.use(cors({
 }));
 
 app.use(session({
-    secret: 'your-secret-key', // Replace with a strong secret key
+    secret: 'your-secret-key',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // Set to true if using HTTPS
+    cookie: { secure: false } 
 }));
 
 let formattedLogsObjectList = [];

@@ -8,9 +8,13 @@ mongoose.connect("mongodb+srv://d00419226:CTm9h4qVJPNHGZ7Y@cluster0.h6fp6.mongod
 
 const UserSchema = new mongoose.Schema({
     email: {type: String, 
-        unique: true
+        unique: true,
+        min: 4,
     },
-    password: {type: String}
+    password: {
+        type: String,
+        min: 4
+    }
     
 })
 
