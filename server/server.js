@@ -12,15 +12,15 @@ const app = express();
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors({
-    origin: 'http://localhost:8080', // Replace with your client URL
+    origin: 'https://jsnowpiano.github.io/PrinterLogicClientLogAnalyzerClient/', 
     credentials: true
 }));
 
 app.use(session({
-    secret: 'your-secret-key', // Replace with a strong secret key
+    secret: 'key',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // Set to true if using HTTPS
+    cookie: { secure: false }
 }));
 
 let formattedLogsObjectList = []
@@ -73,10 +73,10 @@ app.post('/reports', function (req, res) {
     res.status(200).send("Logs parsed successfully.")
 })
 
-app.post("/user", async function(req, res) {
+app.post("/user", function(req, res) {
     try {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(req.body.password, salt);
+        const salt = bcrypt.genSalt(10);
+        const hashedPassword = bcrypt.hash(req.body.password, salt);
 
         let user = new userModel.User({
             email: req.body.email,
@@ -97,14 +97,14 @@ app.post("/user", async function(req, res) {
     }
 })
 
-app.post("/login", async function(req, res) {
+app.post("/login", function(req, res) {
     try {
-        const user = await userModel.User.findOne({ email: req.body.email });
+        const user = userModel.User.findOne({ email: req.body.email });
         if (!user) {
             return res.status(400).json({ success: false, message: "Invalid email or password" });
         }
 
-        const validPassword = await bcrypt.compare(req.body.password, user.password);
+        const validPassword = bcrypt.compare(req.body.password, user.password);
         if (!validPassword) {
             return res.status(400).json({ success: false, message: "Invalid email or password" });
         }
@@ -156,7 +156,7 @@ app.post("/articles", function (req, res) {
 
 app.delete("/articles", function (req, res) {
     articleModel.Article.deleteOne({ description: req.body.description }).then(() => {
-        res.status(200).json({ message: "Article deleted successfully" });
+ res.status(200).json({ message: "Article deleted successfully" });
     }).catch((err) => { 
         res.status(500).json({ message: "Error deleting article" });
         console.log(err);
