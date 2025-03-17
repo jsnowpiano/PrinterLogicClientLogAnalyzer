@@ -53,7 +53,7 @@ const handleLogout = () => {
 
 const handleCreateAccount = () => {
   // Validate username and password length
-  if (username.value.length < 4 || password.value.length < 4) {
+  if (email.value.length < 4 || password.value.length < 4) {
     createAccountError.value = 'Username and password must be at least 4 characters long';
     return;
   }
