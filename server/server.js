@@ -78,9 +78,10 @@ function parseLogs(unfixedLogString) {
 app.get('/reports', function (req, res) {
     res.json(report.generateReports(formattedLogsObjectList));
 });
-
 app.post('/reports', function (req, res) {
     console.log("Parsing logs: ", req.body.logs);
+    formattedLogsObjectList = [];
+
     parseLogs(req.body.logs);
     res.status(200).send("Logs parsed successfully.");
 });
