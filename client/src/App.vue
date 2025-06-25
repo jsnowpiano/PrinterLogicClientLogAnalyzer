@@ -112,6 +112,9 @@ const showLoginForm = () => {
             <RouterLink to="/PrinterLogicClientLogAnalyzerClient/articles" class="custom-link">
               <v-list-item prepend-icon="mdi-clipboard" title="Articles" value="articles"></v-list-item>
             </RouterLink>
+            <RouterLink to="/PrinterLogicClientLogAnalyzerClient/updates" class="custom-link">
+              <v-list-item prepend-icon="mdi-chart-bell-curve" title="Updates" value="update"></v-list-item>
+            </RouterLink>
             <v-list-item prepend-icon="mdi-logout" title="Logout" value="Logout" @click="handleLogout"></v-list-item>
           </v-list>
         </v-navigation-drawer>

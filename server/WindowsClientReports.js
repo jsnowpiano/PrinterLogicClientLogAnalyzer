@@ -165,7 +165,7 @@ function checkIfTraceback(log) {
 }
 
 
-function generateReports(logs) {
+function generateWindowsClientReports(logs) {
     for (let i = 0; i < logs.length; i++) {
         if (checkHeaderReport(logs[i])) {
             createHeaderReport(logs[i])
@@ -179,5 +179,5 @@ function generateReports(logs) {
 }
 
 module.exports = {
-    generateReports
+    generateWindowsClientReports
 }

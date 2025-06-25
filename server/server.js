@@ -3,22 +3,28 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
-const report = require('./reports');
+const report = require('./WindowsClientReports');
 const userModel = require('./modelUser');
 const articleModel = require('./modelarticle');
+const updates = require('./updates.js')
 
 
 
 
-
+// App creation
 const app = express();
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
+//Allowed URLs
+
 const allowedOrigins = [
+    'http://localhost:8080',
     'http://localhost:8081', 
     'https://jsnowpiano.github.io'
 ];
+
+// Implementing Cors
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -31,6 +37,8 @@ app.use(cors({
     credentials: true
 }));
 
+
+// Mounting App
 app.use(session({
     secret: 'your-secret-key',
     resave: false,
@@ -38,9 +46,12 @@ app.use(session({
     cookie: { secure: false } 
 }));
 
+// List for formatted logs
 let formattedLogsObjectList = [];
 
-function checkDate(date) {
+
+// Checks to make sure date is in the right format for windows client logs
+function checkDateWindowsClient(date) {
     if (date.at(4) == "/" && date.at(7) == "/" && date.at(13) == ":" && date.at(16) == ":" && date.at(19) == ":") {
         return true;
     } else {
@@ -48,11 +59,13 @@ function checkDate(date) {
     }
 }
 
-function logObjectGenerator(unfixedLogSubString) {
+
+//  Formats logs into an object
+function logObjectGeneratorWindowsClient(unfixedLogSubString) {
     if (unfixedLogSubString.length > 20) {
         const date = unfixedLogSubString.substr(0, 20);
         
-        if (checkDate(date)) {
+        if (checkDateWindowsClient(date)) {
             let description = unfixedLogSubString.slice(21);
             description = description.replaceAll("\r", "");
             formattedLogsObjectList.push({
@@ -64,28 +77,43 @@ function logObjectGenerator(unfixedLogSubString) {
     }
 }
 
-function parseLogs(unfixedLogString) {
+
+// Function to parse logs
+function parseWindowsClientLogs(unfixedLogString) {
     if (unfixedLogString == null) {
         console.log("No logs to parse.");
         return;
     }
     const seperatedLogList = unfixedLogString.split("\n");
     for (let i = 0; i < seperatedLogList.length; i++) {
-        logObjectGenerator(seperatedLogList[i]);
+        logObjectGeneratorWindowsClient(seperatedLogList[i]);
     }
 }
 
-app.get('/reports', function (req, res) {
-    res.json(report.generateReports(formattedLogsObjectList));
+
+// Route for getting Windows Client Logs report
+app.get('/reportswindowsclient', function (req, res) {
+    console.log("Logs: ", formattedLogsObjectList)
+    res.json(report.generateWindowsClientReports(formattedLogsObjectList));
 });
-app.post('/reports', function (req, res) {
+
+// Route to send Windows Client Logs report
+app.post('/reportswindowsclient', function (req, res) {
     console.log("Parsing logs: ", req.body.logs);
     formattedLogsObjectList = [];
 
-    parseLogs(req.body.logs);
+    parseWindowsClientLogs(req.body.logs);
     res.status(200).send("Logs parsed successfully.");
 });
 
+// Route for new updates
+app.get('/featureupdates', function (req, res) {
+    console.log("Sending Updates: ", updates.updates)
+    res.json(updates.updates);
+})
+
+
+// Route to create User
 app.post("/user", async function(req, res) {
     try {
         const salt = await bcrypt.genSalt(10);
